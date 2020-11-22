@@ -88,7 +88,7 @@ class frr:
         while True:
             if count and count <= _count:
                 # Break out of the loop after specified amount of matches
-                LOG.debug(f'modify_section: reached element limitexit loop at element {_count}')
+                LOG.debug(f'modify_section: reached limit ({_count}), exiting loop at line {_next_start}')
                 break
             # While searching, always assume that the user wants to search for the exact pattern he entered
             # To be more specific the user needs a override, eg. a "pattern.*"
