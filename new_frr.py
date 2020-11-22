@@ -81,18 +81,15 @@ class frr:
             replacement = replacement.split('\n')
         elif not isinstance(replacement, list):
             return ValueError("The replacement element needs to be a string or list type object")
+        LOG.debug(f'modify_section: starting search for {repr(start_pattern)} until {repr(stop_pattern)}')
 
         _count = 0
         _next_start = 0
-        _last_start_match = ''
         while True:
             if count and count <= _count:
                 # Break out of the loop after specified amount of matches
-                LOG.debug(f'modify_section: exit loop at element {_count}')
+                LOG.debug(f'modify_section: reached element limitexit loop at element {_count}')
                 break
-            if self.config[_next_start] == _last_start_match:
-                LOG.debug(f'modify_section: Still at the same element as last run, incrementing start point')
-                _next_start += 1
             # While searching, always assume that the user wants to search for the exact pattern he entered
             # To be more specific the user needs a override, eg. a "pattern.*"
             _w = _find_first_block(self.config, start_pattern+'$', stop_pattern, start_at=_next_start)
@@ -101,14 +98,19 @@ class frr:
                 LOG.debug(f'modify_section: didnt find anything more')
                 break
             start_element, end_element = _w
-            LOG.debug(f'modify_section: found {start_element} {end_element}')
+            LOG.debug(f'modify_section:   found match between {start_element} and {end_element},' +
+                      f'remove and replace old config')
+            for i, e in enumerate(self.config[start_element:end_element+1 if remove_stop_mark else end_element],
+                                  start=start_element):
+                LOG.debug(f'modify_section:   remove       {i:3} {e}')
             del self.config[start_element:end_element+1 if remove_stop_mark else end_element]
             if replacement:
                 # Append the replacement config at the current position
+                for i, e in enumerate(replacement, start=start_element):
+                    LOG.debug(f'modify_section:   replace      {i:3} {e}')
                 self.config[start_element:start_element] = replacement
-                _last_start_match = replacement[0]
             _count += 1
-            _next_start = start_element
+            _next_start = start_element + len(replacement)
 
         return _count
 
